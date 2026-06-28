@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>CodeRibeirinho - Jogo</title>
+  <style>
+    #cartas, #programa {
+      display: flex;
+      gap: 10px;
+      margin: 20px;
+    }
+    .carta img {
+      width: 50px;
+      cursor: grab;
+    }
+
+    #resultado {
+      font-size: 16px;
+      margin: 20px;
+      padding: 10px;
+      min-height: 40px;
+    }
+    .mensagem-vitoria {
+      color: green;
+      font-weight: bold;
+    }
+    .mensagem-derrota {
+      color: red;
+      font-weight: bold;
+    }
+    .mensagem-movimento {
+      color: blue;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+</head>
+<body>
+  <h2>Monte seu programa</h2>
+
+  <!-- Cartas disponíveis -->
+  <div id="cartas">
+    <div class="carta" data-comando="go('up',1)"><img src="/static/img/up1.png"></div>
+    <div class="carta" data-comando="go('down',1)"><img src="/static/img/down1.png"></div>
+    <div class="carta" data-comando="go('left',1)"><img src="/static/img/left1.png"></div>
+    <div class="carta" data-comando="go('right',1)"><img src="/static/img/right1.png"></div>
+    <div class="carta" data-comando="go('up',2)"><img src="/static/img/up2.png"></div>
+    <div class="carta" data-comando="go('down',2)"><img src="/static/img/down2.png"></div>
+    <div class="carta" data-comando="go('left',2)"><img src="/static/img/left2.png"></div>
+    <div class="carta" data-comando="go('right',2)"><img src="/static/img/right2.png"></div>
+    <div class="carta" data-comando="go('up',3)"><img src="/static/img/up3.png"></div>
+    <div class="carta" data-comando="go('down',3)"><img src="/static/img/down3.png"></div>
+    <div class="carta" data-comando="go('left',3)"><img src="/static/img/left3.png"></div>
+    <div class="carta" data-comando="go('right',3)"><img src="/static/img/right3.png"></div>
+  </div>
+
+  <h3>Programa:</h3>
+  <div id="programa"></div>
+
+  <button onclick="executar()">Executar</button>
+
+  <pre id="resultado"></pre>
+
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      width: 480,
+      height: 320,
+      physics: { default: 'arcade', arcade: { debug: false } },
+      scene: { preload, create, update }
+    };
+
+    const game = new Phaser.Game(config);
+    let player, layer;
+    width_player=90;
+    height_player=90;
+
+    function preload() {
+      this.load.image('fundo', '/static/img/fundo.png');
+      this.load.image('tiles', '/static/img/tileset.png');
+      this.load.tilemapCSV('map', '/static/maps/mapa.csv');
+      this.load.spritesheet('player_up', '/static/img/player_up.png', { frameWidth: width_player, frameHeight: height_player });
+      this.load.spritesheet('player_down', '/static/img/player_down.png', { frameWidth: width_player, frameHeight: height_player });
+      this.load.spritesheet('player_left', '/static/img/player_left.png', { frameWidth: width_player, frameHeight: height_player });
+      this.load.spritesheet('player_right', '/static/img/player_right.png', { frameWidth: width_player, frameHeight: height_player });
+    }
+
+    function create() {
+      const bg = this.add.image(config.width/2, config.height/2, 'fundo');
+      bg.setDisplaySize(config.width, config.height);
+      bg.setDepth(-2);
+
+      const map = this.make.tilemap({ key: 'map', tileWidth: 96, tileHeight: 82 });
+      const tileset = map.addTilesetImage('tiles');
+      layer = map.createLayer(0, tileset, 0, 0);
+      layer.setAlpha(0);
+      layer.setCollision([1, 2]);
+
+      let startX = 32, startY = 96;
+      map.forEachTile(tile => {
+        if (tile.index === 4) {
+          startX = tile.x * 46;
+          startY = tile.y * 30;
+        }
+      });
+
+      player = this.physics.add.sprite(startX, startY, 'player_down');
+      player.setDisplaySize(width_player, height_player);
+      this.physics.add.collider(player, layer);
+
+      this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('player_right', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: 'walk_left', frames: this.anims.generateFrameNumbers('player_left', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('player_up', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('player_down', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+    }
+
+    function update() {}
+
+    // Fila de comandos
+    let filaComandos = [];
+    let executando = false;
+
+    async function executar() {
+      filaComandos = [];
+      programa.querySelectorAll('.carta').forEach(c => {
+        filaComandos.push(c.dataset.comando);
+      });
+      if (!executando) processarFila();
+    }
+
+    function processarFila() {
+      if (filaComandos.length === 0) {
+        executando = false;
+        return;
+      }
+      executando = true;
+      const comando = filaComandos.shift();
+      mover(comando, processarFila);
+    }
+
+    function mover(comando, callback) {
+      const match = comando.match(/go\('(\w+)',(\d+)\)/);
+      if (!match) { if (callback) callback(); return; }
+
+      const direcao = match[1];
+      const passos = parseInt(match[2]);
+      let i = 0;
+
+      function andarPasso() {
+        if (i >= passos) {
+          if (callback) callback();
+          return;
+        }
+
+        let destinoX = player.x;
+        let destinoY = player.y;
+
+        if (direcao === "up") destinoY -= 82;
+        if (direcao === "down") destinoY += 82;
+        if (direcao === "left") destinoX -= 96;
+        if (direcao === "right") destinoX += 96;
+
+        player.anims.play('walk_' + direcao, true);
+
+        player.scene.tweens.add({
+          targets: player,
+          x: destinoX,
+          y: destinoY,
+          duration: 400,
+          ease: 'Power2',
+          onComplete: () => {
+            player.anims.stop();
+
+            const tileX = Math.floor(player.x / 32);
+            const tileY = Math.floor(player.y / 32);
+            const tile = layer.getTileAt(tileX, tileY);
+
+            const resultado = document.getElementById('resultado');
+            resultado.className = "";
+
+            if (tile) {
+              if (tile.index === 2) {
+                resultado.textContent = "💧 O personagem caiu na água!";
+                resultado.classList.add("mensagem-derrota");
+                filaComandos = [];
+                executando = false;
+                return;
+              } else if (tile.index === 3) {
+                resultado.textContent = "🚤 Parabéns! Você chegou ao barco!";
+                resultado.classList.add("mensagem-vitoria");
+                filaComandos = [];
+                executando = false;
+                return;
+              } else {
+                resultado.textContent = `➡️ Andou para ${direcao}, posição (${tileX}, ${tileY})`;
+                resultado.classList.add("mensagem-movimento");
+              }
+            }
+
+            i++;
+            andarPasso(); // próximo passo do mesmo comando
+          }
+        });
+      }
+
+      andarPasso();
+    }
+
+    const cartas = document.querySelectorAll('.carta');
+    const programa = document.getElementById('programa');
+
+    cartas.forEach(carta => {
+      carta.addEventListener('click', () => {
+        const clone = carta.cloneNode(true);
+        programa.appendChild(clone);
+      });
+    });
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
+</html>
