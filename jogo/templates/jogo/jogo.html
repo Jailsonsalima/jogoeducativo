@@ -85,6 +85,12 @@
       this.load.spritesheet('player_down', '/static/img/player_down.png', { frameWidth: width_player, frameHeight: height_player });
       this.load.spritesheet('player_left', '/static/img/player_left.png', { frameWidth: width_player, frameHeight: height_player });
       this.load.spritesheet('player_right', '/static/img/player_right.png', { frameWidth: width_player, frameHeight: height_player });
+
+      // 🎵 Música de fundo
+      this.load.audio('bgMusic', '/static/audio/musica.mp3');
+      this.load.audio('splash', '/static/audio/splash.mp3'); // som da água
+      this.load.audio('victory', '/static/audio/victory.mp3');
+      this.load.audio('you-lose', '/static/audio/you-lose.mp3');
     }
 
     function create() {
@@ -114,6 +120,13 @@
       this.anims.create({ key: 'walk_left', frames: this.anims.generateFrameNumbers('player_left', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('player_up', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('player_down', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      // 🎶 Música de fundo
+      
+      const music = this.sound.add('bgMusic', { loop: true, volume: 0.5 });
+      music.play();
+      splashSound = this.sound.add('splash'); // cria o objeto de som
+      victorySound = this.sound.add('victory');
+      youLoseSound = this.sound.add('you-lose');
     }
 
     function update() {}
@@ -129,7 +142,7 @@
       });
       if (!executando) processarFila();
     }
-    time_final = 2500;
+    time_final = 4000;
     function processarFila() {
       if (filaComandos.length === 0) {
         executando = false;
@@ -142,6 +155,7 @@
         resultado.className = "";
 
         if (tile && tile.index !== 2 && tile.index !== 3) {
+          youLoseSound.play({ volume: 0.7 });
           resultado.textContent = "❌ Você não conseguiu chegar ao objetivo final!";
           resultado.classList.add("mensagem-derrota");
           setTimeout(reiniciar, time_final); // reinicia uma vez após 10s
@@ -198,6 +212,8 @@
               if (tile.index === 2) {
                 resultado.textContent = "💧 O personagem caiu na água!";
                 resultado.classList.add("mensagem-derrota");
+
+                splashSound.play({ volume: 0.7 });
                 filaComandos = [];
                 executando = false;
 
@@ -207,6 +223,7 @@
               } else if (tile.index === 3) {
                 resultado.textContent = "🚤 Parabéns! Você chegou ao barco!";
                 resultado.classList.add("mensagem-vitoria");
+                victorySound.play({ volume: 0.7 });
                 filaComandos = [];
                 executando = false;
 
@@ -220,6 +237,7 @@
               }
             } else {
               // se não encontrou tile, também reinicia
+              splashSound.play({ volume: 0.7 });
               resultado.textContent = "💧 O personagem caiu na água!";
               resultado.className = ""; // limpa todas as classes
               resultado.classList.add("mensagem-derrota");
