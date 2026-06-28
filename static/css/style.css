@@ -92,9 +92,14 @@ button:hover {
 @media (max-width: 480px) {
     .container {
         padding: 20px;
-        max-width: 90%;
+        width: 100%;
+        margin: 0; 
     }
-
+    #game-container {
+        width: 100%;       /* jogo ocupa toda a largura */
+        padding: 0;        /* opcional: remove padding */
+        
+    }
     h2 {
         font-size: 20px;
     }
