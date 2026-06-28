@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from usuarios.views import login_view, logout_view
+from usuarios.views import login_view, logout_view, politica_privacidade
 from jogo.views import jogo_view
 from jogo.views import executar_view
 
@@ -26,4 +26,5 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('jogo/', jogo_view, name='jogo'),
     path('jogo/executar/', executar_view, name='executar'),
+    path('privacidade/', politica_privacidade, name='politica_privacidade'),
 ]

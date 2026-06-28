@@ -3,6 +3,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 
+def politica_privacidade(request):
+    return render(request, 'privacidade.html')
+
+
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")

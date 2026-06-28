@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Login - CodeRibeirinho{% endblock %}
 {% block content %}
-    <div class="container">
+
         <h2>Jogo Educativo - CodeRibeirinho</h2>
         <p>Faça seu Login para acessar</p>
 
@@ -12,8 +12,8 @@
             
             <label for="senha">Senha</label>
             <input type="password" id="senha" name="senha" required>
-            
+            <a href="{% url 'politica_privacidade' %}" style="text-decoration: none;">Política de privacidade</a>
             <button type="submit">Entrar</button>
         </form>
-    </div>
+
 {% endblock %}
