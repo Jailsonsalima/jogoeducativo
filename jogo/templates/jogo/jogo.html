@@ -1,41 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>CodeRibeirinho - Jogo</title>
-  <style>
-    #cartas, #programa {
-      display: flex;
-      gap: 10px;
-      margin: 20px;
-    }
-    .carta img {
-      width: 50px;
-      cursor: grab;
-    }
+{% extends "base.html" %}
+{% block title %}CodeRibeirinho - Jogo{% endblock %}
+{% block content %}
 
-    #resultado {
-      font-size: 16px;
-      margin: 20px;
-      padding: 10px;
-      min-height: 40px;
-    }
-    .mensagem-vitoria {
-      color: green;
-      font-weight: bold;
-    }
-    .mensagem-derrota {
-      color: red;
-      font-weight: bold;
-    }
-    .mensagem-movimento {
-      color: blue;
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
-</head>
-<body>
-  <h2>Monte seu programa</h2>
+<div class="jogo-container">
+  
+
+<!-- Cenário do jogo -->
+  <div id="game-container"></div>
+  <pre id="resultado"></pre>
+</div>
+
+
+<div id="mensagens-movimento"></div>
+
+<div class="painel">
+  <button onclick="executar()">Executar</button>
+  <h3>Programa:</h3>
+  <div id="programa"></div>
+  <h2>Selecione as cartas para criar seu programa</h2>
 
   <!-- Cartas disponíveis -->
   <div id="cartas">
@@ -53,23 +35,44 @@
     <div class="carta" data-comando="go('right',3)"><img src="/static/img/right3.png"></div>
   </div>
 
-  <h3>Programa:</h3>
-  <div id="programa"></div>
+  
 
-  <button onclick="executar()">Executar</button>
-
-  <pre id="resultado"></pre>
-
+</div>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <script>
+    function reiniciar() {
+      // Destroi o jogo atual
+      game.destroy(true);
+
+      // Cria um novo jogo com a mesma configuração
+      game = new Phaser.Game(config);
+
+      // Limpa mensagens e programa
+      document.getElementById('resultado').textContent = "";
+      document.getElementById('resultado').className = "";
+      document.getElementById('programa').innerHTML = "";
+
+      // Se tiver uma área separada para mensagens de movimento
+      const mensagensMovimento = document.getElementById('mensagens-movimento');
+      if (mensagensMovimento) {
+        mensagensMovimento.textContent = "";
+        mensagensMovimento.className = "";
+      }
+      filaComandos = [];
+      executando = false;
+    }
+
+
     const config = {
       type: Phaser.AUTO,
       width: 480,
       height: 320,
+      parent: "game-container", // importante: renderiza dentro da div
       physics: { default: 'arcade', arcade: { debug: false } },
       scene: { preload, create, update }
     };
 
-    const game = new Phaser.Game(config);
+    let game = new Phaser.Game(config);
     let player, layer;
     width_player=90;
     height_player=90;
@@ -126,10 +129,24 @@
       });
       if (!executando) processarFila();
     }
-
+    time_final = 2500;
     function processarFila() {
       if (filaComandos.length === 0) {
         executando = false;
+
+        // Verifica tile final
+        const tileX = Math.floor(player.x / 32);
+        const tileY = Math.floor(player.y / 32);
+        const tile = layer.getTileAt(tileX, tileY);
+        const resultado = document.getElementById('resultado');
+        resultado.className = "";
+
+        if (tile && tile.index !== 2 && tile.index !== 3) {
+          resultado.textContent = "❌ Você não conseguiu chegar ao objetivo final!";
+          resultado.classList.add("mensagem-derrota");
+          setTimeout(reiniciar, time_final); // reinicia uma vez após 10s
+        }
+        
         return;
       }
       executando = true;
@@ -183,17 +200,30 @@
                 resultado.classList.add("mensagem-derrota");
                 filaComandos = [];
                 executando = false;
+
+                // reinicia automaticamente após 10 segundos
+                setTimeout(reiniciar, time_final);
                 return;
               } else if (tile.index === 3) {
                 resultado.textContent = "🚤 Parabéns! Você chegou ao barco!";
                 resultado.classList.add("mensagem-vitoria");
                 filaComandos = [];
                 executando = false;
+
+                // reinicia automaticamente após 10 segundos
+                setTimeout(reiniciar, time_final);
                 return;
               } else {
-                resultado.textContent = `➡️ Andou para ${direcao}, posição (${tileX}, ${tileY})`;
-                resultado.classList.add("mensagem-movimento");
+                const mensagensMovimento = document.getElementById('mensagens-movimento');
+                mensagensMovimento.textContent = `Comando: ➡️ go ${direcao}`;
+                mensagensMovimento.className = "mensagem-movimento";
               }
+            } else {
+              // se não encontrou tile, também reinicia
+              resultado.textContent = "💧 O personagem caiu na água!";
+              resultado.className = ""; // limpa todas as classes
+              resultado.classList.add("mensagem-derrota");
+              setTimeout(reiniciar, time_final);
             }
 
             i++;
@@ -230,5 +260,4 @@
       return cookieValue;
     }
   </script>
-</body>
-</html>
+{% endblock %}

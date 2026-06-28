@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}CodeRibeirinho - Jogo{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    
+</head>
+<body>
+    <header>
+        <h1>Jogo Educativo - CodeRibeirinho</h1>
+        {% if user.is_authenticated %}
+            <p>Bem-vindo, {{ user.username }} | <a href="{% url 'logout' %}" style="color:#fff;">Sair</a></p>
+        {% endif %}
+    </header>
+
+    <div class="container">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% block content %}
+        <!-- Conteúdo específico de cada página -->
+        {% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 - Jogo Educativo - CodeRibeirinho</p>
+    </footer>
+</body>
+</html>
