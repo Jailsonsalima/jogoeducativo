@@ -5,6 +5,15 @@
         <h2>Jogo Educativo - CodeRibeirinho</h2>
         <p>Faça seu Login para acessar</p>
 
+        <div style="background:#f0f8ff; padding:10px; border-radius:8px; margin-bottom:15px;">
+            <h3>Como funciona o acesso:</h3>
+            <ol>
+                <li>Digite seu e-mail e senha.</li>
+                <li>Se for seu primeiro acesso, uma conta será criada automaticamente.</li>
+                <li>Nos próximos acessos, basta usar o mesmo e-mail e senha para entrar.</li>
+            </ol>
+            <p>Simples e rápido: cadastro e login em um único passo!</p>
+        </div>
         <form method="post">
             {% csrf_token %}
             <label for="email">E-mail</label>
