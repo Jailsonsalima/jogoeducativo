@@ -91,6 +91,8 @@
       this.load.audio('splash', '/static/audio/splash.mp3'); // som da água
       this.load.audio('victory', '/static/audio/victory.mp3');
       this.load.audio('you-lose', '/static/audio/you-lose.mp3');
+      this.load.audio('carta_selecionada', '/static/audio/carta_selecionada.mp3');
+      
     }
 
     function create() {
@@ -127,6 +129,7 @@
       splashSound = this.sound.add('splash'); // cria o objeto de som
       victorySound = this.sound.add('victory');
       youLoseSound = this.sound.add('you-lose');
+      cartaSelecionadaSound = this.sound.add('carta_selecionada');
     }
 
     function update() {}
@@ -258,6 +261,7 @@
 
     cartas.forEach(carta => {
       carta.addEventListener('click', () => {
+        cartaSelecionadaSound.play({ volume: 0.7 });
         const clone = carta.cloneNode(true);
         programa.appendChild(clone);
       });
